@@ -10,35 +10,59 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 # DATABASE CONFIGURATION
 # --------------------------------------------------
 
-# Project root directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Persistent storage directory:
-# Local: MaaMemo project directory
-# Render: /var/data (configured through environment variable)
-DATA_DIR = Path(
-    os.getenv("MAAMEMO_DATA_DIR", str(BASE_DIR))
-)
+# Use Supabase PostgreSQL when DATABASE_URL is configured.
+# Otherwise, use local SQLite for development.
 
-# Ensure storage directory exists
-DATA_DIR.mkdir(parents=True, exist_ok=True)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# SQLite database file
-DATABASE_PATH = DATA_DIR / "maamemo.db"
+if DATABASE_URL:
+    # Render / Supabase PostgreSQL
+    DATABASE_URL = DATABASE_URL.strip()
 
-# SQLite connection URL
-DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
+    # Support standard PostgreSQL connection URLs
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace(
+            "postgres://",
+            "postgresql://",
+            1
+        )
+
+    print("Using PostgreSQL database")
+
+else:
+    # Local SQLite database
+    DATA_DIR = Path(
+        os.getenv("MAAMEMO_DATA_DIR", str(BASE_DIR))
+    )
+
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+    DATABASE_PATH = DATA_DIR / "maamemo.db"
+    DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
+
+    print(f"Using local SQLite database: {DATABASE_PATH}")
 
 
 # --------------------------------------------------
 # DATABASE ENGINE
 # --------------------------------------------------
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    pool_pre_ping=True
-)
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        pool_pre_ping=True
+    )
+
+else:
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        connect_args={"sslmode": "require"}
+    )
 
 
 # --------------------------------------------------
