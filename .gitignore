@@ -1,0 +1,35 @@
+
+# Python virtual environment
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Python cache and test files
+.pytest_cache/
+.mypy_cache/
+
+# SQLite database and temporary files
+*.db
+*.db-shm
+*.db-wal
+
+# Audio recordings
+audio/*
+!audio/.gitkeep
+
+# Node dependencies and build output
+node_modules/
+dist/
+
+# IDE settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
