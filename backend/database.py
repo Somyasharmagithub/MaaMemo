@@ -7,21 +7,28 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 
 # --------------------------------------------------
-# DATABASE CONFIGURATION
+# PATHS
 # --------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Use Supabase PostgreSQL when DATABASE_URL is configured.
-# Otherwise, use local SQLite for development.
+# Used for audio files by main.py
+DATA_DIR = Path(
+    os.getenv("MAAMEMO_DATA_DIR", str(BASE_DIR))
+)
+
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+
+# --------------------------------------------------
+# DATABASE CONFIGURATION
+# --------------------------------------------------
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
-    # Render / Supabase PostgreSQL
     DATABASE_URL = DATABASE_URL.strip()
 
-    # Support standard PostgreSQL connection URLs
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace(
             "postgres://",
@@ -32,13 +39,6 @@ if DATABASE_URL:
     print("Using PostgreSQL database")
 
 else:
-    # Local SQLite database
-    DATA_DIR = Path(
-        os.getenv("MAAMEMO_DATA_DIR", str(BASE_DIR))
-    )
-
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-
     DATABASE_PATH = DATA_DIR / "maamemo.db"
     DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
 
@@ -77,14 +77,14 @@ SessionLocal = sessionmaker(
 
 
 # --------------------------------------------------
-# BASE CLASS FOR DATABASE MODELS
+# BASE CLASS
 # --------------------------------------------------
 
 Base = declarative_base()
 
 
 # --------------------------------------------------
-# DATABASE SESSION DEPENDENCY
+# DATABASE DEPENDENCY
 # --------------------------------------------------
 
 def get_db():
